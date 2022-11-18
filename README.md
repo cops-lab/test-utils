@@ -1,0 +1,3 @@
+# Test Utils
+
+This repository contains a set of test utilities that are used throughout the COPS lab projects. The test utilities can be added as a regular dependency to Maven `pom.xml` files. Please refer to the GitHub documentation to understand [how to access the package registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
