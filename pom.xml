@@ -4,11 +4,16 @@
     <parent>
         <groupId>dev.c0ps</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.3</version>
     </parent>
 
     <artifactId>test-utils</artifactId>
     <version>0.0.2-SNAPSHOT</version>
+
+    <properties>
+        <!-- automatically set through: mvn versions:set -DupdateBuildOutputTimestampPolicy=always -DnewVersion=... -->
+        <project.build.outputTimestamp>2023-08-15T22:59:19Z</project.build.outputTimestamp>
+    </properties>
 
     <build>
         <plugins>
@@ -41,7 +46,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.8.2</version>
+            <version>5.10.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.stefanbirkner</groupId>
@@ -51,7 +56,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.11</version>
+            <version>3.13.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.valfirst</groupId>
@@ -62,7 +67,7 @@
             <!-- exposed by slf4j-test -->
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.0.1-jre</version>
+            <version>32.1.2-jre</version>
         </dependency>
         <dependency>
             <!-- exposed by slf4j-test -->
@@ -73,32 +78,32 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
+            <version>4.5.14</version>
         </dependency>
         <dependency>
             <!-- exposed by httpclient -->
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>4.4.13</version>
+            <version>4.4.16</version>
         </dependency>
         <dependency>
             <!-- required to run HttpTestServer (in tests and dependents) -->
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
-            <version>3.0.3</version>
+            <version>3.1.3</version>
         </dependency>
 
         <!-- tests -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>3.0.3</version>
+            <version>3.1.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
