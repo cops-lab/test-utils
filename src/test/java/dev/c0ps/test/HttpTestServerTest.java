@@ -40,7 +40,7 @@ import jakarta.ws.rs.core.Response;
 
 public class HttpTestServerTest {
 
-    private static final int PORT = 8080;
+    private static final int PORT = 1234;
 
     private static HttpTestServer sut;
 
@@ -84,14 +84,17 @@ public class HttpTestServerTest {
         var r = baseRequest("/", TEXT_PLAIN).get(Response.class);
         var body = r.readEntity(String.class);
 
+        assertEquals(200, r.getStatus());
         assertEquals(MediaType.TEXT_PLAIN_TYPE, r.getMediaType());
         assertEquals("n/a", body);
     }
 
     @Test
     public void configCanBeReset() {
+        // run any other test
         requestHandlerCanBeChanged();
         sut.reset();
+        // and yet another one
         servesRequestsWithDefaultHandler();
         assertEquals(1, sut.requests.size());
     }
@@ -103,6 +106,19 @@ public class HttpTestServerTest {
         var r = baseRequest("/", APPLICATION_JSON).get(Response.class);
         var body = r.readEntity(String.class);
 
+        assertEquals(200, r.getStatus());
+        assertEquals(APPLICATION_JSON_TYPE, r.getMediaType());
+        assertEquals("[1,2,3]", body);
+    }
+
+    @Test
+    public void statusCodeCanBeChanged() {
+        sut.setResponse(404, APPLICATION_JSON, "[1,2,3]");
+
+        var r = baseRequest("/", APPLICATION_JSON).get(Response.class);
+        var body = r.readEntity(String.class);
+
+        assertEquals(404, r.getStatus());
         assertEquals(APPLICATION_JSON_TYPE, r.getMediaType());
         assertEquals("[1,2,3]", body);
     }

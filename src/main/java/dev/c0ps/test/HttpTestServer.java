@@ -59,6 +59,10 @@ public class HttpTestServer {
         response = new Response(mimeType, body);
     }
 
+    public void setResponse(int statusCode, String mimeType, String body) {
+        response = new Response(statusCode, mimeType, body);
+    }
+
     public void reset() {
         response = new Response();
         requests.clear();
@@ -147,7 +151,7 @@ public class HttpTestServer {
     }
 
     private void printResponse(PrintWriter out) {
-        out.printf("HTTP/1.1 200 OK\n");
+        out.printf("HTTP/1.1 %d\n", response.statusCode);
         out.printf("Server: TestServer\n");
         out.printf("Date: %s\n", new Date());
         out.printf("Content-type: %s\n", response.mimeType);
@@ -194,12 +198,19 @@ public class HttpTestServer {
 
     private static class Response {
 
+        public int statusCode = 200;
         public String mimeType = "text/plain";
         public String body = "n/a";
 
         private Response() {}
 
         private Response(String mimeType, String body) {
+            this.mimeType = mimeType;
+            this.body = body;
+        }
+
+        private Response(int statusCode, String mimeType, String body) {
+            this.statusCode = statusCode;
             this.mimeType = mimeType;
             this.body = body;
         }
