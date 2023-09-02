@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.event.Level;
+
 import com.github.valfirst.slf4jtest.TestLogger;
 import com.github.valfirst.slf4jtest.TestLoggerFactory;
-
-import uk.org.lidalia.slf4jext.Level;
 
 public class TestLoggerUtils {
 

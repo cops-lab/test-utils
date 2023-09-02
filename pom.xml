@@ -44,6 +44,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.7</version>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.10.0</version>
@@ -61,19 +66,7 @@
         <dependency>
             <groupId>com.github.valfirst</groupId>
             <artifactId>slf4j-test</artifactId>
-            <version>2.4.1</version>
-        </dependency>
-        <dependency>
-            <!-- exposed by slf4j-test -->
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>32.1.2-jre</version>
-        </dependency>
-        <dependency>
-            <!-- exposed by slf4j-test -->
-            <groupId>uk.org.lidalia</groupId>
-            <artifactId>lidalia-slf4j-ext</artifactId>
-            <version>1.0.0</version>
+            <version>3.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
