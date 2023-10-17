@@ -25,11 +25,13 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,34 +40,45 @@ import org.apache.http.client.utils.URIBuilder;
 
 public class HttpTestServer {
 
+    private static final Response DEFAULT_RESPONSE = new Response();
     private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
 
     private final ServerSocket server;
 
     private Socket socket;
 
-    private Response response = new Response();
+    private final LinkedList<Response> responses = new LinkedList<>();
     public final List<Request> requests = new LinkedList<>();
 
     public HttpTestServer(int port) {
         try {
             server = new ServerSocket(port);
+            responses.add(DEFAULT_RESPONSE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void setResponse(String mimeType, String body) {
-        response = new Response(mimeType, body);
+    public Response addResponse(String mimeType, String body) {
+        return addResponse(new Response(mimeType, body));
     }
 
-    public void setResponse(int statusCode, String mimeType, String body) {
-        response = new Response(statusCode, mimeType, body);
+    public Response addResponse(int statusCode, String mimeType, String body) {
+        return addResponse(new Response(statusCode, mimeType, body));
+    }
+
+    private Response addResponse(Response r) {
+        if (responses.size() == 1 && responses.getFirst() == DEFAULT_RESPONSE) {
+            responses.clear();
+        }
+        responses.add(r);
+        return r;
     }
 
     public void reset() {
-        response = new Response();
         requests.clear();
+        responses.clear();
+        responses.add(DEFAULT_RESPONSE);
     }
 
     public void start() {
@@ -91,7 +104,10 @@ public class HttpTestServer {
                 var req = readRequest(in);
                 if (req != null) {
                     requests.add(req);
-                    printResponse(out);
+                    var r = responses.size() > 1 //
+                            ? responses.pop() //
+                            : responses.getFirst();
+                    printResponse(r, out);
                 }
             } finally {
                 close(in, out, socket);
@@ -150,12 +166,18 @@ public class HttpTestServer {
         return req;
     }
 
-    private void printResponse(PrintWriter out) {
+    private void printResponse(Response response, PrintWriter out) {
         out.printf("HTTP/1.1 %d\n", response.statusCode);
-        out.printf("Server: TestServer\n");
+        out.printf("Server: %s\n", HttpTestServer.class.getSimpleName());
         out.printf("Date: %s\n", new Date());
         out.printf("Content-type: %s\n", response.mimeType);
         out.printf("Content-length: %d\n", response.body.length());
+
+        for (var key : response.headers.keySet()) {
+            var val = response.headers.get(key);
+            out.printf("%s: %s\n", key, val);
+        }
+
         out.printf("\n"); // empty line separates headers from content
         out.print(response.body); // no new line!
         out.flush();
@@ -196,11 +218,20 @@ public class HttpTestServer {
         }
     }
 
-    private static class Response {
+    public static class Response {
 
-        public int statusCode = 200;
-        public String mimeType = "text/plain";
-        public String body = "n/a";
+        private static final String LAST_MODIFIED = "Last-Modified";
+        private static final String LOCATION = "Location";
+        private static final SimpleDateFormat GMT = new SimpleDateFormat("EEEE, dd MMM yyyy HH:mm:ss z");
+
+        {
+            GMT.setTimeZone(TimeZone.getTimeZone("GMT"));
+        }
+
+        private int statusCode = 200;
+        private String mimeType = "text/plain";
+        private String body = "n/a";
+        private final Map<String, String> headers = new LinkedHashMap<>();
 
         private Response() {}
 
@@ -213,6 +244,22 @@ public class HttpTestServer {
             this.statusCode = statusCode;
             this.mimeType = mimeType;
             this.body = body;
+        }
+
+        public Response addHeader(String key, String value) {
+            headers.put(key, value);
+            return this;
+        }
+
+        public Response setLastModified(Date lastModified) {
+            return addHeader(LAST_MODIFIED, GMT.format(lastModified));
+        }
+
+        public Response setLocation(String location) {
+            if (statusCode != 301 && statusCode != 302 && statusCode != 303 && statusCode != 307 && statusCode != 308) {
+                throw new IllegalStateException("Setting the location header is only meaningful for status codes 301, 302, 303, 307, and 308");
+            }
+            return addHeader(LOCATION, location);
         }
     }
 }

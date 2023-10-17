@@ -20,8 +20,14 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.glassfish.jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -101,7 +107,7 @@ public class HttpTestServerTest {
 
     @Test
     public void requestHandlerCanBeChanged() {
-        sut.setResponse(APPLICATION_JSON, "[1,2,3]");
+        sut.addResponse(APPLICATION_JSON, "[1,2,3]");
 
         var r = baseRequest("/", APPLICATION_JSON).get(Response.class);
         var body = r.readEntity(String.class);
@@ -113,7 +119,7 @@ public class HttpTestServerTest {
 
     @Test
     public void statusCodeCanBeChanged() {
-        sut.setResponse(404, APPLICATION_JSON, "[1,2,3]");
+        sut.addResponse(404, APPLICATION_JSON, "[1,2,3]");
 
         var r = baseRequest("/", APPLICATION_JSON).get(Response.class);
         var body = r.readEntity(String.class);
@@ -193,6 +199,109 @@ public class HttpTestServerTest {
         var actual = sut.requests.get(0).body;
         var expected = "xxx";
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void responseHasDefault() {
+        var actual = someRequest().readEntity(String.class);
+        assertEquals("n/a", actual);
+    }
+
+    @Test
+    public void responseCanBeSet() {
+        sut.addResponse(TEXT_PLAIN, "x1");
+        var actual = someRequest().readEntity(String.class);
+        assertEquals("x1", actual);
+    }
+
+    @Test
+    public void responseIsReset() {
+        sut.addResponse(TEXT_PLAIN, "x2");
+        sut.reset();
+        var actual = someRequest().readEntity(String.class);
+        assertEquals("n/a", actual);
+    }
+
+    @Test
+    public void responseDefaultIsReplacedWithAdd() {
+        sut.addResponse(TEXT_PLAIN, "x3");
+        var actual = someRequest().readEntity(String.class);
+        assertEquals("x3", actual);
+    }
+
+    @Test
+    public void responseCanBeVaried() {
+        sut.addResponse(TEXT_PLAIN, "x4");
+        sut.addResponse(TEXT_PLAIN, "x5");
+
+        var r1 = someRequest().readEntity(String.class);
+        var r2 = someRequest().readEntity(String.class);
+
+        assertEquals("x4", r1);
+        assertEquals("x5", r2);
+    }
+
+    @Test
+    public void lastResponseIsRepeated() {
+        sut.addResponse(TEXT_PLAIN, "x6");
+        sut.addResponse(TEXT_PLAIN, "x7");
+
+        someRequest();
+        someRequest();
+        var actual = someRequest().readEntity(String.class);
+
+        assertEquals("x7", actual);
+    }
+
+    @Test
+    public void lastModifiedIsNotSetByDefault() {
+        assertNull(someRequest().getLastModified());
+    }
+
+    @Test
+    public void lastModifiedCanBeSet() {
+        var d = new Date(123 * 1000);
+        sut.addResponse(TEXT_PLAIN, "...").setLastModified(d);
+
+        var actual = someRequest().getLastModified();
+
+        var expected = new Date(123 * 1000).getTime();
+        assertNotNull(actual);
+        assertTrue(expected - actual.getTime() < 1000);
+    }
+
+    @Test
+    public void locationIsNotSetByDefault() {
+        assertNull(someRequest().getLocation());
+    }
+
+    @Test
+    public void locationCanBeSet() throws URISyntaxException {
+        sut.addResponse(301, TEXT_PLAIN, "...").setLocation("https://somewhere");
+
+        Response r = someRequest();
+        var actual = r.getLocation();
+        var expected = new URI("https://somewhere");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void locationChecksStatusCode() throws URISyntaxException {
+        var someUrl = "https://somewhere";
+        sut.addResponse(301, TEXT_PLAIN, "...").setLocation(someUrl);
+        sut.addResponse(302, TEXT_PLAIN, "...").setLocation(someUrl);
+        sut.addResponse(303, TEXT_PLAIN, "...").setLocation(someUrl);
+        sut.addResponse(307, TEXT_PLAIN, "...").setLocation(someUrl);
+        sut.addResponse(308, TEXT_PLAIN, "...").setLocation(someUrl);
+
+        var e = assertThrows(IllegalStateException.class, () -> {
+            sut.addResponse(200, TEXT_PLAIN, "...").setLocation(someUrl);
+        });
+        assertEquals("Setting the location header is only meaningful for status codes 301, 302, 303, 307, and 308", e.getMessage());
+    }
+
+    private Response someRequest() {
+        return baseRequest("/", TEXT_PLAIN).get(Response.class);
     }
 
     public Response get(String path, String mediaType) {
