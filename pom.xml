@@ -8,11 +8,11 @@
     </parent>
 
     <artifactId>test-utils</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7-SNAPSHOT</version>
 
     <properties>
         <!-- automatically set through: mvn versions:set -DupdateBuildOutputTimestampPolicy=always -DnewVersion=... -->
-        <project.build.outputTimestamp>2023-10-17T02:07:23Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2023-10-17T02:08:31Z</project.build.outputTimestamp>
     </properties>
 
     <build>
